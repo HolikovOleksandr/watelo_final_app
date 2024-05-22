@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,27 +19,75 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    console.log('Received request to create user:', createUserDto);
+    try {
+      return await this.userService.createUser(createUserDto);
+    } catch (error) {
+      console.error('Error in UserController create method:', error);
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('Failed to create user');
+      }
+    }
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  async findAll() {
+    try {
+      return await this.userService.findAllUsers();
+    } catch (error) {
+      throw new NotFoundException('Users not found');
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    try {
+      return await this.userService.findUserById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      } else {
+        throw new BadRequestException('Failed to find user');
+      }
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    try {
+      return await this.userService.updateUser(id, updateUserDto);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('Failed to update user');
+      }
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  async remove(@Param('id') id: string) {
+    try {
+      await this.userService.removeUser(id);
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('Failed to delete user');
+      }
+    }
   }
 }
