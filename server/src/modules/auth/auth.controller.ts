@@ -1,22 +1,23 @@
 import {
   Controller,
-  Request,
   Post,
   UseGuards,
   Body,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { LocalGuard } from './guards/local.guard';
 import { CreateUserDto } from '../user/dto/create-user.dto';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async signIn(@Request() req): Promise<{ access_token: string }> {
+  @UseGuards(LocalGuard)
+  async signIn(@Req() req: Request): Promise<{ access_token: string }> {
     return this.authService.signIn(req.user);
   }
 
