@@ -1,8 +1,13 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -11,26 +16,29 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validate(email: string, pass: string): Promise<any> {
     const user = await this.userService.findUserByEmail(email);
-    if (!user) return null;
+    if (!user) throw new UnauthorizedException('Invalid email');
 
-    const isPasswordValid = await bcrypt.compare(pass, user.password);
-    if (!isPasswordValid) return null;
+    const validPass = await bcrypt.compare(pass, user.password);
+    if (!validPass) throw new UnauthorizedException('Invalid password');
 
     const { password, ...result } = user;
+    // console.log('::::: AuthService', result);
     return result;
   }
 
-  async signIn(user: any): Promise<{ access_token: string }> {
-    const payload = { email: user.email, sub: user.id };
-    return { access_token: this.jwtService.sign(payload) };
+  async signIn(user: any): Promise<{}> {
+    const payload = { email: user.email, id: user.id, role: user.role };
+    return { payload, access_token: this.jwtService.sign(payload) };
   }
 
-  async register(createUserDto: CreateUserDto): Promise<any> {
+  async register(dto: CreateUserDto): Promise<{}> {
     try {
-      const createdUser = await this.userService.createUser(createUserDto);
+      const createdUser: User = await this.userService.createUser(dto);
       const { password, ...result } = createdUser;
+      console.log(createdUser);
+
       return result;
     } catch (error) {
       throw new BadRequestException('Failed to create user');

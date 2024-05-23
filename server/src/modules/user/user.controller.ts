@@ -9,22 +9,23 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { RoleGuard } from './guards/admin-role.guard';
 
 @Controller('user')
+@UseGuards(RoleGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    console.log('Received request to create user:', createUserDto);
     try {
       return await this.userService.createUser(createUserDto);
     } catch (error) {
-      console.error('Error in UserController create method:', error);
       if (
         error instanceof ConflictException ||
         error instanceof BadRequestException
