@@ -11,4 +11,7 @@ export default () => ({
     secret: process.env.JWT_SECRET,
     expires: process.env.JWT_EXPIRES,
   },
+  bot: {
+    token: process.env.BOT_TOKEN,
+  },
 });

@@ -81,4 +81,14 @@ export class UserService {
       throw new InternalServerErrorException('Failed to delete user');
     }
   }
+
+  async removeAllUsers(): Promise<void> {
+    const allUsers = await this.findAllUsers();
+
+    try {
+      await this.userRepository.remove(allUsers);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to delete user');
+    }
+  }
 }

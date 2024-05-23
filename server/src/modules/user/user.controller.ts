@@ -91,4 +91,21 @@ export class UserController {
       }
     }
   }
+
+  @Delete()
+  async removeAll() {
+    try {
+      await this.userService.removeAllUsers();
+      return { message: 'All users deleted successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('Failed to delete users');
+      }
+    }
+  }
 }

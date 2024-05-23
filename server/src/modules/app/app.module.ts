@@ -4,6 +4,7 @@ import { UserModule } from '../user/user.module';
 import configuration from '../../config/configuration';
 import { DatabaseModule } from '../database/database.module';
 import { AuthModule } from '../auth/auth.module';
+import { BotService } from '../bot/bot.service';
 
 @Module({
   imports: [
@@ -12,5 +13,6 @@ import { AuthModule } from '../auth/auth.module';
     UserModule,
     AuthModule,
   ],
+  providers: [BotService],
 })
 export class AppModule {}
