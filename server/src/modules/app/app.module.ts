@@ -5,6 +5,7 @@ import configuration from '../../config/configuration';
 import { DatabaseModule } from '../database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { BotService } from '../bot/bot.service';
+import { ProductModule } from '../product/product.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { BotService } from '../bot/bot.service';
     DatabaseModule,
     UserModule,
     AuthModule,
+    ProductModule,
   ],
   providers: [BotService],
 })

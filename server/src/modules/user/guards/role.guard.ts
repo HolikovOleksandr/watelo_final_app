@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { UserRole } from '../entities/user-role.enum';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -24,6 +25,7 @@ export class RoleGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('jwt.secret'),
       });
+
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers
       request['user'] = payload;
@@ -47,8 +49,7 @@ export class RoleGuard implements CanActivate {
     return authHeader.split(' ')[1];
   }
 
-  private checkRoles(role: string): boolean {
-    const allowedRoles = ['admin', 'superadmin'];
-    return allowedRoles.includes(role);
+  private checkRoles(role: UserRole): boolean {
+    return role === UserRole.ADMIN || role === UserRole.SUPERADMIN;
   }
 }

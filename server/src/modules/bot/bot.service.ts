@@ -96,7 +96,7 @@ export class BotService implements OnModuleInit {
     }
 
     const user = users[0];
-    let message = `Сторінка ${page} з ${totalPages}\n\n`;
+    let message = `Запит ${page} з ${totalPages}\n\n`;
     message += `_Name_: *${user.name}*\n`;
     message += `_Surname_: *${user.surname}*\n`;
     message += `_Phone_: *${user.phone}*\n`;

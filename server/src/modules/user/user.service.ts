@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from './entities/user-role.enum';
 
 @Injectable()
 export class UserService {
@@ -85,8 +86,12 @@ export class UserService {
   async removeAllUsers(): Promise<void> {
     const allUsers = await this.findAllUsers();
 
+    const notAdmins = allUsers.filter(
+      (u) => u.role !== UserRole.ADMIN && u.role !== UserRole.SUPERADMIN,
+    );
+
     try {
-      await this.userRepository.remove(allUsers);
+      await this.userRepository.remove(notAdmins);
     } catch (error) {
       throw new InternalServerErrorException('Failed to delete user');
     }
