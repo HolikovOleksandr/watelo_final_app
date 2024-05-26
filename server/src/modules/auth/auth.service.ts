@@ -24,7 +24,6 @@ export class AuthService {
     if (!validPass) throw new UnauthorizedException('Invalid password');
 
     const { password, ...result } = user;
-    // console.log('::::: AuthService', result);
     return result;
   }
 
@@ -33,15 +32,15 @@ export class AuthService {
     return { payload, access_token: this.jwtService.sign(payload) };
   }
 
-  async register(dto: CreateUserDto): Promise<{}> {
+  async signUp(dto: CreateUserDto) {
     try {
-      const createdUser: User = await this.userService.createUser(dto);
+      const createdUser = await this.userService.createUser(dto);
       const { password, ...result } = createdUser;
       console.log(createdUser);
 
       return result;
     } catch (error) {
-      throw new BadRequestException('Failed to create user');
+      throw new BadRequestException('Failed to create user!!!!!');
     }
   }
 }

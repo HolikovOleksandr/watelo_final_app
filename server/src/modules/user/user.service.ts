@@ -11,12 +11,14 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from './entities/user-role.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly configService: ConfigService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -25,7 +27,8 @@ export class UserService {
     const existUser = await this.userRepository.findOne({ where: { email } });
     if (existUser) throw new ConflictException('This email already exists');
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashSalt = +this.configService.get<number>('hash.salt');
+    const hashedPassword = await bcrypt.hash(password, hashSalt);
 
     const newUser = this.userRepository.create({
       email,

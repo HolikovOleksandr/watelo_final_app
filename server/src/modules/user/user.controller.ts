@@ -17,23 +17,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { RoleGuard } from './guards/role.guard';
 
 @Controller('user')
-@UseGuards(RoleGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @UseGuards(RoleGuard)
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       return await this.userService.createUser(createUserDto);
     } catch (error) {
-      if (
-        error instanceof ConflictException ||
-        error instanceof BadRequestException
-      ) {
-        throw new BadRequestException(error.message);
-      } else {
-        throw new BadRequestException('Failed to create user');
-      }
+      throw new BadRequestException('Failed to create user');
     }
   }
 
@@ -60,35 +53,23 @@ export class UserController {
   }
 
   @Patch(':id')
+  @UseGuards(RoleGuard)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
       return await this.userService.updateUser(id, updateUserDto);
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw new BadRequestException(error.message);
-      } else {
-        throw new BadRequestException('Failed to update user');
-      }
+      throw new BadRequestException('Failed to update user');
     }
   }
 
   @Delete(':id')
+  @UseGuards(RoleGuard)
   async remove(@Param('id') id: string) {
     try {
       await this.userService.removeUser(id);
       return { message: 'User deleted successfully' };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw new BadRequestException(error.message);
-      } else {
-        throw new BadRequestException('Failed to delete user');
-      }
+      throw new BadRequestException('Failed to delete user');
     }
   }
 
@@ -98,14 +79,7 @@ export class UserController {
       await this.userService.removeAllUsers();
       return { message: 'All users deleted successfully' };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw new BadRequestException(error.message);
-      } else {
-        throw new BadRequestException('Failed to delete users');
-      }
+      throw new BadRequestException('Failed to delete users');
     }
   }
 }
