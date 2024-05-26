@@ -14,14 +14,14 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RoleGuard } from './guards/role.guard';
+import { AdminRoleGuard } from './guards/admin-role.guard';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @UseGuards(RoleGuard)
+  @UseGuards(AdminRoleGuard)
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       return await this.userService.createUser(createUserDto);
@@ -53,7 +53,7 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseGuards(RoleGuard)
+  @UseGuards(AdminRoleGuard)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
       return await this.userService.updateUser(id, updateUserDto);
@@ -63,7 +63,7 @@ export class UserController {
   }
 
   @Delete(':id')
-  @UseGuards(RoleGuard)
+  @UseGuards(AdminRoleGuard)
   async remove(@Param('id') id: string) {
     try {
       await this.userService.removeUser(id);
@@ -74,6 +74,7 @@ export class UserController {
   }
 
   @Delete()
+  @UseGuards(AdminRoleGuard)
   async removeAll() {
     try {
       await this.userService.removeAllUsers();

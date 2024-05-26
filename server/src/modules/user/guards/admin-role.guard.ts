@@ -7,10 +7,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UserRole } from '../entities/user-role.enum';
+import { Role } from '../entities/user-role.enum';
 
 @Injectable()
-export class RoleGuard implements CanActivate {
+export class AdminRoleGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -31,7 +31,7 @@ export class RoleGuard implements CanActivate {
       request['user'] = payload;
 
       // Check if the user has the required role
-      if (!this.checkRoles(payload.role)) {
+      if (!this.checkAdminRoles(payload.role)) {
         throw new UnauthorizedException(
           'You don`t have the necessary permissions',
         );
@@ -49,7 +49,7 @@ export class RoleGuard implements CanActivate {
     return authHeader.split(' ')[1];
   }
 
-  private checkRoles(role: UserRole): boolean {
-    return role === UserRole.ADMIN || role === UserRole.SUPERADMIN;
+  private checkAdminRoles(role: Role): boolean {
+    return role === Role.ADMIN || role === Role.SUPERADMIN;
   }
 }

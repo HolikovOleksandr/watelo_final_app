@@ -22,15 +22,18 @@ export class AuthController {
   @Post('login')
   @UseGuards(LocalGuard)
   async login(@Req() req: Request): Promise<{}> {
-    return this.authService.signIn(req.user);
+    try {
+      return this.authService.signIn(req.user);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto): Promise<any> {
+  async register(@Body() createUserDto: CreateUserDto): Promise<{}> {
     try {
       return await this.authService.signUp(createUserDto);
     } catch (error) {
-      console.error(error);
       throw new BadRequestException(error.message);
     }
   }

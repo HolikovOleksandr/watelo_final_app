@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { UserRole } from './user-role.enum';
+import { Role } from './user-role.enum';
 import { Product } from 'src/modules/product/entities/product.entity';
 
 @Entity()
@@ -21,10 +21,10 @@ export class User {
 
   @Column({
     type: 'enum',
-    enum: UserRole,
-    default: UserRole.SUPERADMIN,
+    enum: Role,
+    default: Role.SUPERADMIN,
   })
-  role: UserRole;
+  role: Role;
 
   @Column()
   password: string;

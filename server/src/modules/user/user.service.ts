@@ -10,7 +10,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRole } from './entities/user-role.enum';
+import { Role } from './entities/user-role.enum';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -90,7 +90,7 @@ export class UserService {
     const allUsers = await this.findAllUsers();
 
     const notAdmins = allUsers.filter(
-      (u) => u.role !== UserRole.ADMIN && u.role !== UserRole.SUPERADMIN,
+      (u) => u.role !== Role.ADMIN && u.role !== Role.SUPERADMIN,
     );
 
     try {

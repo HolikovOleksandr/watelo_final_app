@@ -7,7 +7,6 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -32,12 +31,11 @@ export class AuthService {
     return { payload, access_token: this.jwtService.sign(payload) };
   }
 
-  async signUp(dto: CreateUserDto) {
+  async signUp(dto: CreateUserDto): Promise<{}> {
     try {
       const createdUser = await this.userService.createUser(dto);
-      const { password, ...result } = createdUser;
-      console.log(createdUser);
 
+      const { password, ...result } = createdUser;
       return result;
     } catch (error) {
       throw new BadRequestException('Failed to create user!!!!!');

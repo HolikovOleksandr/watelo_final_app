@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { CreateProductDto } from './dto/create-product.dto';
-import { UserRole } from '../user/entities/user-role.enum';
+import { Role } from '../user/entities/user-role.enum';
 
 @Injectable()
 export class ProductService {
@@ -48,8 +48,8 @@ export class ProductService {
     if (
       !(
         product.creator.id === userId ||
-        product.creator.role === UserRole.ADMIN ||
-        product.creator.role === UserRole.SUPERADMIN
+        product.creator.role === Role.ADMIN ||
+        product.creator.role === Role.SUPERADMIN
       )
     ) {
       throw new UnauthorizedException(
@@ -75,8 +75,8 @@ export class ProductService {
     if (
       !(
         product.creator.id === userId ||
-        product.creator.role === UserRole.ADMIN ||
-        product.creator.role === UserRole.SUPERADMIN
+        product.creator.role === Role.ADMIN ||
+        product.creator.role === Role.SUPERADMIN
       )
     ) {
       throw new UnauthorizedException(

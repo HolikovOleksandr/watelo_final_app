@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
-import { UserRole } from '../user/entities/user-role.enum';
+import { Role } from '../user/entities/user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Bot, InlineKeyboard } from 'grammy';
@@ -120,7 +120,7 @@ export class BotService implements OnModuleInit {
 
   async getPendingUsers(page: number, limit: number) {
     const [users, total] = await this.userRepository.findAndCount({
-      where: { role: UserRole.PENDING },
+      where: { role: Role.PENDING },
       take: limit,
       skip: (page - 1) * limit,
     });
@@ -132,7 +132,7 @@ export class BotService implements OnModuleInit {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) throw new Error('User not found');
 
-    user.role = UserRole.USER;
+    user.role = Role.USER;
     await this.userRepository.save(user);
   }
 
@@ -144,18 +144,18 @@ export class BotService implements OnModuleInit {
 
   async confirmAllMembers() {
     const pendingUsers = await this.userRepository.find({
-      where: { role: UserRole.PENDING },
+      where: { role: Role.PENDING },
     });
 
     for (const user of pendingUsers) {
-      user.role = UserRole.USER;
+      user.role = Role.USER;
       await this.userRepository.save(user);
     }
   }
 
   async rejectAllMembers() {
     const pendingUsers = await this.userRepository.find({
-      where: { role: UserRole.PENDING },
+      where: { role: Role.PENDING },
     });
 
     await this.userRepository.remove(pendingUsers);
