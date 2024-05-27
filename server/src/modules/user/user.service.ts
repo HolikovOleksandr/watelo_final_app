@@ -7,17 +7,21 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { In, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Role } from './entities/role.enum';
 import { ConfigService } from '@nestjs/config';
+import { Product } from '../product/entities/product.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private userRepository: Repository<User>,
+
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+
     private readonly configService: ConfigService,
   ) {}
 
@@ -132,6 +136,7 @@ export class UserService {
       await this.userRepository.remove(user);
     } catch (error) {
       // Throw an internal server error if delete fails
+      console.log(error.message);
       throw new InternalServerErrorException('Failed to delete user');
     }
   }

@@ -21,7 +21,11 @@ export class Product {
   @Column({ type: 'double precision' })
   price: number;
 
-  @ManyToOne(() => User, (user) => user.products, { nullable: false })
+  @ManyToOne(() => User, (user) => user.products, {
+    cascade: true,
+    // onDelete: 'CASCADE',
+    nullable: false,
+  })
   @JoinColumn({ name: 'creatorId' })
   creator: User;
 }

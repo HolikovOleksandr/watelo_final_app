@@ -2,12 +2,14 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { IJwtPayload } from './interfases/jwt-payload.interface';
+import { Role } from '../user/entities/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -41,8 +43,14 @@ export class AuthService {
    * Signs in the user by creating a JWT token.
    * @param user - The validated user object.
    * @returns An object containing the JWT payload and the access token.
+   * @throws ForbiddenException if the user's role is Role.PENDING.
    */
   async signIn(user: any): Promise<{}> {
+    // Check if the user's role is Role.PENDING
+    if (user.role === Role.PENDING) {
+      throw new ForbiddenException('You are not accepted user');
+    }
+
     // Create the JWT payload
     const payload: IJwtPayload = {
       email: user.email,
@@ -50,10 +58,9 @@ export class AuthService {
       id: user.id,
     };
 
-    // Return the payload and the signed JWT token
+    // Sign the JWT token and return the payload along with the access token
     return { payload, access_token: this.jwtService.sign(payload) };
   }
-
   /**
    * Signs up a new user.
    * @param dto - The DTO containing the user's sign-up details.

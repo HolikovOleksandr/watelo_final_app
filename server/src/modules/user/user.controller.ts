@@ -13,10 +13,10 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RoleGuard } from './guards/role.guard';
-import { Roles } from './decorators/roles.decorator';
+import { UserRoleGuard } from './guards/user-role.guard';
 import { Role } from './entities/role.enum';
 import { User } from './entities/user.entity';
+import { Roles } from '../app/decorators/roles.decorator';
 
 @Controller('user')
 export class UserController {
@@ -30,7 +30,7 @@ export class UserController {
    * @throws BadRequestException if failed to create user.
    */
   @Post()
-  @UseGuards(RoleGuard) // Protecting route with RoleGuard
+  @UseGuards(UserRoleGuard) // Protecting route with RoleGuard
   @Roles(Role.SUPERADMIN, Role.ADMIN) // Allowing only SUPERADMIN and ADMIN roles
   async createUser(@Body() dto: CreateUserDto) {
     try {
@@ -53,7 +53,7 @@ export class UserController {
    * @throws BadRequestException if failed to create admin.
    */
   @Post('admin')
-  @UseGuards(RoleGuard) // Protecting route with RoleGuard
+  @UseGuards(UserRoleGuard) // Protecting route with RoleGuard
   @Roles(Role.SUPERADMIN) // Allowing only SUPERADMIN role
   async createAdmin(@Body() dto: CreateUserDto) {
     try {
@@ -109,9 +109,10 @@ export class UserController {
    * @param dto - The UpdateUserDto object containing updated user data.
    * @returns A Promise<User> representing the updated user.
    * @throws BadRequestException if failed to update user.
+   * payload.id == request.params.id
    */
   @Patch(':id')
-  @UseGuards(RoleGuard)
+  @UseGuards(UserRoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
   async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     try {
@@ -129,7 +130,7 @@ export class UserController {
    * @throws BadRequestException if failed to delete user.
    */
   @Delete(':id')
-  @UseGuards(RoleGuard)
+  @UseGuards(UserRoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
   async remove(@Param('id') id: string): Promise<{}> {
     try {

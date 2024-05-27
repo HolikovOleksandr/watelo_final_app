@@ -13,10 +13,10 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
-import { RoleGuard } from '../user/guards/role.guard';
-import { Roles } from '../user/decorators/roles.decorator';
+import { UserRoleGuard } from '../user/guards/user-role.guard';
 import { Role } from '../user/entities/role.enum';
 import { User } from '../user/entities/user.entity';
+import { Roles } from '../app/decorators/roles.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -64,7 +64,7 @@ export class AuthController {
    * @returns The authenticated user's profile.
    */
   @Get('profile')
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(AuthGuard, UserRoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
   getProfile(@Req() req: Request) {
     // Return the authenticated user's profile

@@ -14,12 +14,46 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Request } from 'express';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { Role } from '../user/entities/role.enum';
+import { ProductRoleGuard } from './guards/product-role.guard';
+import { Roles } from '../app/decorators/roles.decorator';
+import { JwtService } from '@nestjs/jwt';
+import { IJwtPayload } from '../auth/interfases/jwt-payload.interface';
+import { UserService } from '../user/user.service';
 
-@UseGuards(AuthGuard)
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
+  ) {}
+
+  @Post()
+  async createProduct(@Body() dto: CreateProductDto, @Req() req: Request) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    const token = authHeader.split(' ')[1];
+    let payload: IJwtPayload;
+
+    try {
+      payload = this.jwtService.verify(token);
+    } catch (err) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    const user = await this.userService.findUserById(payload.id);
+    if (!user) throw new BadRequestException('User not found');
+
+    try {
+      return await this.productService.createProduct(dto, user);
+    } catch (err) {
+      throw new BadRequestException('Failed to create product');
+    }
+  }
 
   @Get()
   async getAllProducts() {
@@ -39,37 +73,23 @@ export class ProductController {
     }
   }
 
-  @Post()
-  async createProduct(@Body() dto: CreateProductDto, @Req() req: Request) {
-    const { id } = req.user as any;
-
-    try {
-      return await this.productService.createProduct(id, dto);
-    } catch (err) {
-      throw new BadRequestException('Failed to create product');
-    }
-  }
-
   @Patch(':id')
-  async updateProduct(
-    @Param('id') id: string,
-    @Body() dto: CreateProductDto,
-    @Req() req: Request,
-  ) {
-    const { id: userId } = req.user as any;
+  @UseGuards(ProductRoleGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
+  async updateProduct(@Param('id') id: string, @Body() dto: CreateProductDto) {
     try {
-      return await this.productService.updateProduct(userId, id, dto);
+      return await this.productService.updateProduct(id, dto);
     } catch (err) {
       throw new BadRequestException('Failed to update product');
     }
   }
 
   @Delete(':id')
-  async deleteProduct(@Param('id') id: string, @Req() req: Request) {
-    const { id: userId } = req.user as any;
-
+  @UseGuards(ProductRoleGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
+  async deleteProduct(@Param('id') id: string) {
     try {
-      await this.productService.deleteProduct(id, userId);
+      await this.productService.deleteProduct(id);
       return { message: 'Product deleted successfully' };
     } catch (err) {
       throw new BadRequestException('Failed to delete product');

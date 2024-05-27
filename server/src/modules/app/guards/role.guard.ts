@@ -1,25 +1,20 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '../entities/role.enum';
-import { ROLES_KEY } from '../decorators/roles.decorator';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from 'src/modules/user/entities/role.enum';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 import { IJwtPayload } from 'src/modules/auth/interfases/jwt-payload.interface';
 
-/**
- * RoleGuard ensures access to routes based on the user's role.
- * Grants access if the user has the required role or if the user
- * is a regular user trying to perform an action on their own ID
- */
 @Injectable()
-export class RoleGuard implements CanActivate {
+export abstract class RoleGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private readonly jwtService: JwtService,
+    protected reflector: Reflector,
+    protected jwtService: JwtService,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -45,17 +40,15 @@ export class RoleGuard implements CanActivate {
 
     // Verify and decode the JWT token
     let payload: IJwtPayload;
-
     try {
       payload = this.jwtService.verify(token);
     } catch (err) {
       throw new ForbiddenException('Unauthorized');
     }
 
-    // Check if the user is a regular user and matches the ID in the route params
-    const isSelfId = payload.id == request.params.id;
     const isUser = payload.role == Role.USER;
-    if (isUser && !isSelfId) return false;
+    const canChange = this.isChangeble(payload, request);
+    if (isUser && !canChange) return false;
 
     // Check if the user has the required role
     const hasRole = requiredRoles.includes(payload.role);
@@ -64,4 +57,9 @@ export class RoleGuard implements CanActivate {
     // If none of the checks pass, deny access
     throw new ForbiddenException('You haven`t permission to this action');
   }
+
+  protected abstract isChangeble(
+    payload: IJwtPayload,
+    request: any,
+  ): Promise<boolean> | boolean;
 }

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from '../user/user.module';
 import configuration from '../../config/configuration';
 import { DatabaseModule } from '../database/database.module';
@@ -15,6 +15,6 @@ import { ProductModule } from '../product/product.module';
     AuthModule,
     ProductModule,
   ],
-  providers: [BotService],
+  providers: [BotService, ConfigService],
 })
 export class AppModule {}

@@ -1,14 +1,13 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Role } from '../user/entities/role.enum';
 
 @Injectable()
 export class ProductService {
@@ -20,42 +19,23 @@ export class ProductService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createProduct(userId: string, dto: CreateProductDto): Promise<Product> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
+  async createProduct(dto: CreateProductDto, creator: User): Promise<Product> {
+    const product = this.productRepository.create({ ...dto, creator });
 
-    const product = new Product();
-    product.title = dto.title;
-    product.description = dto.description;
-    product.price = dto.price;
-    product.creator = user;
-
-    return this.productRepository.save(product);
+    try {
+      return await this.productRepository.save(product);
+    } catch (err) {
+      throw new BadRequestException('Failed to create product');
+    }
   }
 
-  async updateProduct(
-    userId: string,
-    productId: string,
-    dto: CreateProductDto,
-  ): Promise<Product> {
+  async updateProduct(id: string, dto: CreateProductDto): Promise<Product> {
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id },
       relations: ['creator'],
     });
 
     if (!product) throw new NotFoundException('Product not found');
-
-    if (
-      !(
-        product.creator.id === userId ||
-        product.creator.role === Role.ADMIN ||
-        product.creator.role === Role.SUPERADMIN
-      )
-    ) {
-      throw new UnauthorizedException(
-        'You are not authorized to delete this product',
-      );
-    }
 
     product.title = dto.title;
     product.description = dto.description;
@@ -64,27 +44,13 @@ export class ProductService {
     return this.productRepository.save(product);
   }
 
-  async deleteProduct(productId: string, userId: string): Promise<void> {
+  async deleteProduct(productId: string): Promise<void> {
     const product = await this.productRepository.findOne({
       where: { id: productId },
       relations: ['creator'],
     });
 
-    if (!product) throw new NotFoundException('Product not found');
-
-    if (
-      !(
-        product.creator.id === userId ||
-        product.creator.role === Role.ADMIN ||
-        product.creator.role === Role.SUPERADMIN
-      )
-    ) {
-      throw new UnauthorizedException(
-        'You are not authorized to delete this product',
-      );
-    }
-
-    await this.productRepository.delete(productId);
+    await this.productRepository.delete(product);
   }
 
   async getAllProducts(): Promise<Product[]> {
@@ -92,7 +58,11 @@ export class ProductService {
   }
 
   async getProductById(id: string): Promise<Product> {
-    const product = await this.productRepository.findOne({ where: { id } });
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: ['creator'],
+    });
+
     if (!product) throw new NotFoundException('Product not found');
     return product;
   }
