@@ -33,7 +33,7 @@ export class AuthService {
 
   async signUp(dto: CreateUserDto): Promise<{}> {
     try {
-      const createdUser = await this.userService.createUser(dto);
+      const createdUser = await this.userService.create(dto);
 
       const { password, ...result } = createdUser;
       return result;
