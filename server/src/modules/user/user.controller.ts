@@ -34,10 +34,12 @@ export class UserController {
   @Roles(Role.SUPERADMIN, Role.ADMIN) // Allowing only SUPERADMIN and ADMIN roles
   async createUser(@Body() dto: CreateUserDto) {
     try {
-      const user = dto as User;
-      user.role = Role.USER; // Setting role to USER for new user creation
+      await this.userService.create(dto);
 
-      return await this.userService.create(user);
+      let user: User = await this.userService.findUserByEmail(dto.email);
+      user.role = Role.USER;
+
+      return await this.userService.updateUser(user.id, user);
     } catch (error) {
       throw new BadRequestException('Failed to create user');
     }
@@ -55,12 +57,14 @@ export class UserController {
   @Roles(Role.SUPERADMIN) // Allowing only SUPERADMIN role
   async createAdmin(@Body() dto: CreateUserDto) {
     try {
-      const admin = dto as User;
-      admin.role = Role.ADMIN; // Setting role to ADMIN for new admin creation
+      await this.userService.create(dto);
 
-      return await this.userService.create(admin);
+      let user: User = await this.userService.findUserByEmail(dto.email);
+      user.role = Role.ADMIN;
+
+      return await this.userService.updateUser(user.id, user);
     } catch (error) {
-      throw new BadRequestException('Failed to create admin');
+      throw new BadRequestException('Failed to create user');
     }
   }
 
@@ -127,7 +131,7 @@ export class UserController {
   @Delete(':id')
   @UseGuards(RoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string): Promise<{}> {
     try {
       await this.userService.removeUser(id);
       return { message: 'User deleted successfully' };
