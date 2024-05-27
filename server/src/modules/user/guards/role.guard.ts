@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Role } from '../entities/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/modules/auth/interfases/jwt-payload.interface';
+import { IJwtPayload } from 'src/modules/auth/interfases/jwt-payload.interface';
 
 /**
  * RoleGuard ensures access to routes based on the user's role.
@@ -44,7 +44,7 @@ export class RoleGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
 
     // Verify and decode the JWT token
-    let payload: JwtPayload;
+    let payload: IJwtPayload;
 
     try {
       payload = this.jwtService.verify(token);

@@ -66,13 +66,17 @@ export class UserService {
   }
 
   /**
-   * Find a user by ID.
+   * Find a user and her products by ID.
    * @param id - The ID of the user to find.
    * @returns A Promise<User> representing the found user.
    * @throws NotFoundException if user with the provided ID is not found.
    */
   async findUserById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+
     if (!user) throw new NotFoundException('User not found');
     return user;
   }

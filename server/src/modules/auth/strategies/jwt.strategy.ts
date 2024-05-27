@@ -2,7 +2,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/modules/user/entities/user.entity';
-import { JwtPayload } from '../interfases/jwt-payload.interface';
+import { IJwtPayload } from '../interfases/jwt-payload.interface';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserService } from 'src/modules/user/user.service';
 
@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * @returns A Promise of the User entity if validation is successful.
    * @throws UnauthorizedException if the user is not found or validation fails.
    */
-  async validate(payload: JwtPayload): Promise<User> {
+  async validate(payload: IJwtPayload): Promise<User> {
     try {
       // Find the user by ID from the payload
       const user = await this.userService.findUserById(payload.id);

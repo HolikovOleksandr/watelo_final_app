@@ -7,7 +7,7 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { JwtPayload } from './interfases/jwt-payload.interface';
+import { IJwtPayload } from './interfases/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +44,7 @@ export class AuthService {
    */
   async signIn(user: any): Promise<{}> {
     // Create the JWT payload
-    const payload: JwtPayload = {
+    const payload: IJwtPayload = {
       email: user.email,
       role: user.role,
       id: user.id,
