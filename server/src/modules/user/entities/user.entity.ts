@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Role } from './user-role.enum';
+import { Role } from './role.enum';
 import { Product } from 'src/modules/product/entities/product.entity';
 
 @Entity()
@@ -22,7 +22,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: Role,
-    default: Role.SUPERADMIN,
+    default: Role.PENDING,
   })
   role: Role;
 

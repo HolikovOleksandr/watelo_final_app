@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Role } from '../user/entities/user-role.enum';
+import { Role } from '../user/entities/role.enum';
 
 @Injectable()
 export class ProductService {

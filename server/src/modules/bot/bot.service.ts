@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
-import { Role } from '../user/entities/user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Bot, InlineKeyboard } from 'grammy';
+import { Role } from '../user/entities/role.enum';
 
 @Injectable()
 export class BotService implements OnModuleInit {
