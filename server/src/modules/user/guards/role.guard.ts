@@ -7,6 +7,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Role } from '../entities/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from 'src/modules/auth/interfases/jwt-payload.interface';
 
 /**
  * RoleGuard ensures access to routes based on the user's role.
@@ -15,7 +17,10 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
  */
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private readonly jwtService: JwtService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     // Retrieve the roles required to access the route
@@ -27,20 +32,36 @@ export class RoleGuard implements CanActivate {
     // If no roles are defined for the route, grant access
     if (!requiredRoles) return true;
 
-    const { user, params } = context.switchToHttp().getRequest();
-    const userRole = user.role as Role;
+    // Retrieve the request
+    const request = context.switchToHttp().getRequest();
 
-    // Additional check: grant access if the user is a regular user
-    // and their ID matches the ID in the route parameters
-    if (userRole === Role.USER && user.id === params.id) return true;
+    // Extract the JWT token from the Authorization header
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Verify and decode the JWT token
+    let payload: JwtPayload;
+
+    try {
+      payload = this.jwtService.verify(token);
+    } catch (err) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    // Check if the user is a regular user and matches the ID in the route params
+    const isSelfId = payload.id == request.params.id;
+    const isUser = payload.role == Role.USER;
+    if (isUser && !isSelfId) return false;
 
     // Check if the user has the required role
-    const hasRole = requiredRoles.includes(userRole);
-
-    // Grant access if the user has the required role
+    const hasRole = requiredRoles.includes(payload.role);
     if (hasRole) return true;
 
     // If none of the checks pass, deny access
-    throw new ForbiddenException('You don`t have permission to perform');
+    throw new ForbiddenException('You haven`t permission to this action');
   }
 }

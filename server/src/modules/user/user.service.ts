@@ -7,7 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from './entities/role.enum';
@@ -92,19 +92,19 @@ export class UserService {
   /**
    * Update a user by ID.
    * @param id - The ID of the user to update.
-   * @param updateUserDto - The UpdateUserDto object containing new user data.
+   * @param dto - The UpdateUserDto object containing new user data.
    * @returns A Promise<User> representing the updated user.
    * @throws NotFoundException if user with the provided ID is not found.
    * @throws InternalServerErrorException if failed to update user.
    */
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findUserById(id);
 
     try {
       // Save updated user data and return updated user
       const updatedUser = await this.userRepository.save({
         ...user,
-        ...updateUserDto,
+        ...dto,
       });
 
       return updatedUser;
@@ -126,27 +126,6 @@ export class UserService {
     try {
       // Remove user from database
       await this.userRepository.remove(user);
-    } catch (error) {
-      // Throw an internal server error if delete fails
-      throw new InternalServerErrorException('Failed to delete user');
-    }
-  }
-
-  /**
-   * Remove all users except admins (SUPERADMIN and ADMIN).
-   * @throws InternalServerErrorException if failed to delete users.
-   */
-  async removeAllUsers(): Promise<void> {
-    const allUsers = await this.findAllUsers();
-
-    // Filter out non-admin users
-    const notAdmins = allUsers.filter(
-      (u) => u.role !== Role.ADMIN && u.role !== Role.SUPERADMIN,
-    );
-
-    try {
-      // Remove non-admin users from database
-      await this.userRepository.remove(notAdmins);
     } catch (error) {
       // Throw an internal server error if delete fails
       throw new InternalServerErrorException('Failed to delete user');

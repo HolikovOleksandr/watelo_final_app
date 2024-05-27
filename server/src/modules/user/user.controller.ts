@@ -100,18 +100,18 @@ export class UserController {
 
   /**
    * Endpoint to update a user by ID.
-   * Only accessible to SUPERADMIN, ADMIN, and USER roles.
+   * Only accessible to SUPERADMIN, ADMIN and USER for him own profile changes.
    * @param id - The ID of the user to update.
-   * @param updateUserDto - The UpdateUserDto object containing updated user data.
+   * @param dto - The UpdateUserDto object containing updated user data.
    * @returns A Promise<User> representing the updated user.
    * @throws BadRequestException if failed to update user.
    */
   @Patch(':id')
-  @UseGuards(RoleGuard) // Protecting route with RoleGuard
-  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER) // Allowing SUPERADMIN, ADMIN, and USER roles
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  @UseGuards(RoleGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     try {
-      return await this.userService.updateUser(id, updateUserDto);
+      return await this.userService.updateUser(id, dto);
     } catch (error) {
       throw new BadRequestException('Failed to update user');
     }
@@ -119,38 +119,20 @@ export class UserController {
 
   /**
    * Endpoint to remove a user by ID.
-   * Only accessible to SUPERADMIN, ADMIN, and USER roles.
+   * Only accessible to SUPERADMIN, ADMIN and  USER for him own profile changes.
    * @param id - The ID of the user to remove.
    * @returns A success message object if user is deleted successfully.
    * @throws BadRequestException if failed to delete user.
    */
   @Delete(':id')
-  @UseGuards(RoleGuard) // Protecting route with RoleGuard
-  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER) // Allowing SUPERADMIN, ADMIN, and USER roles
+  @UseGuards(RoleGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
   async remove(@Param('id') id: string) {
     try {
       await this.userService.removeUser(id);
       return { message: 'User deleted successfully' };
     } catch (error) {
       throw new BadRequestException('Failed to delete user');
-    }
-  }
-
-  /**
-   * Endpoint to remove all users except admins (SUPERADMIN and ADMIN).
-   * Only accessible to SUPERADMIN and ADMIN roles.
-   * @returns A success message object if users are deleted successfully.
-   * @throws BadRequestException if failed to delete users.
-   */
-  @Delete('all')
-  @UseGuards(RoleGuard) // Protecting route with RoleGuard
-  @Roles(Role.SUPERADMIN, Role.ADMIN) // Allowing only SUPERADMIN and ADMIN roles
-  async removeAll() {
-    try {
-      await this.userService.removeAllUsers();
-      return { message: 'All users deleted successfully' };
-    } catch (error) {
-      throw new BadRequestException('Failed to delete users');
     }
   }
 }
