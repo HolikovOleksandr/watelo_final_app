@@ -7,17 +7,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
+        const env = configService.get<string>('env');
+
         const host = configService.get<string>('database.host');
         const port = configService.get<number>('database.port');
         const username = configService.get<string>('database.username');
         const password = configService.get<string>('database.password');
         const database = configService.get<string>('database.name');
+        const testDatabase = configService.get<string>('database.testName');
 
-        console.log('Database Host:', host);
-        console.log('Database Port:', port);
-        console.log('Database Username:', username);
-        console.log('Database Password:', password);
-        console.log('Database Name:', database);
+        const isDevDb = env == 'test' ? testDatabase : database;
+        console.log('Db in use: ', isDevDb);
 
         return {
           type: 'postgres',
@@ -25,9 +25,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           port,
           username,
           password,
-          database,
+          database: isDevDb,
           entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-          synchronize: true, // Вимкніть у виробничому середовищі
+          synchronize: true,
         };
       },
       inject: [ConfigService],

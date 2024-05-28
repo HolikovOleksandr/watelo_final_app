@@ -1,10 +1,12 @@
 export default () => ({
   port: +process.env.PORT,
+  env: process.env.NODE_ENV,
   database: {
     host: process.env.PG_HOST,
     port: +process.env.PG_PORT,
     username: process.env.PG_USERNAME,
-    name: process.env.PG_DATABASE_NAME,
+    name: process.env.PG_DATABASE,
+    testName: process.env.TEST_PG_DATABASE,
     password: process.env.PG_PASSWORD,
   },
   jwt: {
