@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,6 +13,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Product } from '../product/entities/product.entity';
+import { Role } from './entities/role.enum';
+import { IJwtPayload } from '../auth/interfases/jwt-payload.interface';
 
 @Injectable()
 export class UserService {
@@ -20,8 +23,6 @@ export class UserService {
     private userRepository: Repository<User>,
 
     @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-
     private readonly configService: ConfigService,
   ) {}
 
@@ -96,18 +97,28 @@ export class UserService {
   /**
    * Update a user by ID.
    * @param id - The ID of the user to update.
-   * @param dto - The UpdateUserDto object containing new user data.
+   * @param dto - The UpdateUserDto object containing updated user data.
+   * @param requesterId - The ID of the user making the request.
    * @returns A Promise<User> representing the updated user.
    * @throws NotFoundException if user with the provided ID is not found.
    * @throws InternalServerErrorException if failed to update user.
    */
-  async updateUser(id: string, dto: UpdateUserDto): Promise<User> {
+  async updateUser(
+    id: string,
+    dto: UpdateUserDto,
+    payload: IJwtPayload,
+  ): Promise<User> {
     try {
       // Find the user by ID
       const user = await this.userRepository.findOne({ where: { id } });
 
       // Throw NotFoundException if user is not found
       if (!user) throw new NotFoundException('User not found');
+
+      // Check if the requester is trying to change another user's role
+      if (payload.role === Role.USER && dto.role !== Role.USER) {
+        throw new BadRequestException('You are not allowed to role');
+      }
 
       // Update user entity with new data from dto
       const updatedUser = await this.userRepository.save({
@@ -117,10 +128,10 @@ export class UserService {
 
       return updatedUser;
     } catch (error) {
-      // Catch and re-throw the error as InternalServerErrorException
-      throw new InternalServerErrorException('Failed to update user');
+      throw new InternalServerErrorException(error.message);
     }
   }
+
   /**
    * Remove a user by ID.
    * @param id - The ID of the user to remove.
@@ -128,7 +139,10 @@ export class UserService {
    * @throws InternalServerErrorException if failed to delete user.
    */
   async removeUser(id: string): Promise<void> {
-    const user = await this.findUserById(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
 
     // Throw NotFoundException if user is not found
     if (!user) throw new NotFoundException('User not found');

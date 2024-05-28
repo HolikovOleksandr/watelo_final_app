@@ -9,18 +9,24 @@ import {
   NotFoundException,
   BadRequestException,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRoleGuard } from './guards/user-role.guard';
 import { Role } from './entities/role.enum';
-import { User } from './entities/user.entity';
 import { Roles } from '../app/decorators/roles.decorator';
+import { AuthService } from '../auth/auth.service';
+import { IJwtPayload } from '../auth/interfases/jwt-payload.interface';
+import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
+  ) {}
 
   /**
    * Endpoint to create a new user.
@@ -30,16 +36,12 @@ export class UserController {
    * @throws BadRequestException if failed to create user.
    */
   @Post()
-  @UseGuards(UserRoleGuard) // Protecting route with RoleGuard
-  @Roles(Role.SUPERADMIN, Role.ADMIN) // Allowing only SUPERADMIN and ADMIN roles
+  @UseGuards(UserRoleGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async createUser(@Body() dto: CreateUserDto) {
     try {
-      await this.userService.create(dto);
-
-      let user: User = await this.userService.findUserByEmail(dto.email);
-      user.role = Role.USER;
-
-      return await this.userService.updateUser(user.id, user);
+      const user = await this.userService.create(dto);
+      return user;
     } catch (error) {
       throw new BadRequestException('Failed to create user');
     }
@@ -53,18 +55,25 @@ export class UserController {
    * @throws BadRequestException if failed to create admin.
    */
   @Post('admin')
-  @UseGuards(UserRoleGuard) // Protecting route with RoleGuard
-  @Roles(Role.SUPERADMIN) // Allowing only SUPERADMIN role
-  async createAdmin(@Body() dto: CreateUserDto) {
+  @UseGuards(UserRoleGuard)
+  @Roles(Role.SUPERADMIN)
+  async createAdmin(@Body() dto: CreateUserDto, @Req() req: Request) {
     try {
-      await this.userService.create(dto);
+      const user = await this.userService.create(dto);
+      const updateData = { ...user, role: Role.ADMIN };
 
-      let user: User = await this.userService.findUserByEmail(dto.email);
-      user.role = Role.ADMIN;
+      const token = req.headers.authorization;
+      const payload: IJwtPayload = this.authService.validateToken(token);
 
-      return await this.userService.updateUser(user.id, user);
+      const updatedUser = await this.userService.updateUser(
+        user.id,
+        updateData,
+        payload,
+      );
+
+      return updatedUser;
     } catch (error) {
-      throw new BadRequestException('Failed to create user');
+      throw new BadRequestException('Failed to create admin');
     }
   }
 
@@ -103,20 +112,26 @@ export class UserController {
   }
 
   /**
-   * Endpoint to update a user by ID.
-   * Only accessible to SUPERADMIN, ADMIN and USER for him own profile changes.
+   * Update a user by ID.
+   * Only accessible to SUPERADMIN, ADMIN and USER for their own profile changes.
    * @param id - The ID of the user to update.
    * @param dto - The UpdateUserDto object containing updated user data.
    * @returns A Promise<User> representing the updated user.
    * @throws BadRequestException if failed to update user.
-   * payload.id == request.params.id
    */
   @Patch(':id')
   @UseGuards(UserRoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
-  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @Req() request: any,
+  ) {
     try {
-      return await this.userService.updateUser(id, dto);
+      // Get the decoded JWT payload
+      const token = request.headers.authorization;
+      const payload = this.authService.validateToken(token);
+      return await this.userService.updateUser(id, dto, payload);
     } catch (error) {
       throw new BadRequestException('Failed to update user');
     }
