@@ -17,39 +17,26 @@ import { Request } from 'express';
 import { Role } from '../user/entities/role.enum';
 import { ProductRoleGuard } from './guards/product-role.guard';
 import { Roles } from '../app/decorators/roles.decorator';
-import { JwtService } from '@nestjs/jwt';
-import { IJwtPayload } from '../auth/interfases/jwt-payload.interface';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { UserService } from '../user/user.service';
+import { AuthService } from '../auth/auth.service';
 
 @Controller('product')
 export class ProductController {
   constructor(
     private readonly productService: ProductService,
-    private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly authService: AuthService,
   ) {}
 
   @Post()
   async createProduct(@Body() dto: CreateProductDto, @Req() req: Request) {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new BadRequestException('Invalid token');
-    }
-
-    const token = authHeader.split(' ')[1];
-    let payload: IJwtPayload;
+    const payload = this.authService.validateToken(authHeader);
+    const creator = await this.userService.findUserById(payload.id);
 
     try {
-      payload = this.jwtService.verify(token);
-    } catch (err) {
-      throw new BadRequestException('Invalid token');
-    }
-
-    const user = await this.userService.findUserById(payload.id);
-    if (!user) throw new BadRequestException('User not found');
-
-    try {
-      return await this.productService.createProduct(dto, user);
+      return await this.productService.createProduct(dto, creator);
     } catch (err) {
       throw new BadRequestException('Failed to create product');
     }
@@ -76,7 +63,7 @@ export class ProductController {
   @Patch(':id')
   @UseGuards(ProductRoleGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
-  async updateProduct(@Param('id') id: string, @Body() dto: CreateProductDto) {
+  async updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     try {
       return await this.productService.updateProduct(id, dto);
     } catch (err) {

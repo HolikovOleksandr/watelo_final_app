@@ -25,7 +25,7 @@ export class AuthService {
    * @returns The user object without the password if validation is successful.
    * @throws UnauthorizedException if the email or password is invalid.
    */
-  async validate(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<any> {
     // Find the user by email
     const user = await this.userService.findUserByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid email');
@@ -37,6 +37,25 @@ export class AuthService {
     // Return the user object without the password
     const { password, ...result } = user;
     return result;
+  }
+
+  /**
+   * Validates the JWT token from the authorization header.
+   * @param authHeader - The authorization header containing the JWT token.
+   * @returns The decoded JWT payload.
+   * @throws BadRequestException if the token is invalid.
+   */
+  validateToken(authHeader: string): IJwtPayload {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    try {
+      const token = authHeader.split(' ')[1];
+      return this.jwtService.verify<IJwtPayload>(token);
+    } catch (err) {
+      throw new BadRequestException('Invalid token');
+    }
   }
 
   /**
