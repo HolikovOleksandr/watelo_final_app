@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { IJwtPayload } from 'src/modules/auth/interfases/jwt-payload.interface';
-import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { ProductService } from '../product.service';
 import { RoleGuard } from 'src/modules/app/guards/role.guard';
+import { AuthService } from 'src/modules/auth/auth.service';
 
 /**
  * ProductRoleGuard ensures access to product routes based on the user's role.
@@ -14,10 +14,10 @@ import { RoleGuard } from 'src/modules/app/guards/role.guard';
 export class ProductRoleGuard extends RoleGuard {
   constructor(
     reflector: Reflector,
-    jwtService: JwtService,
+    authService: AuthService,
     private productService: ProductService,
   ) {
-    super(reflector, jwtService);
+    super(reflector, authService);
   }
 
   protected async isChangeble(payload: IJwtPayload, request: any) {

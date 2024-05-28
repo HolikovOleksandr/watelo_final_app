@@ -5,18 +5,13 @@ import {
   Body,
   BadRequestException,
   Req,
-  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalGuard } from './guards/local.guard';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { Request } from 'express';
-import { AuthGuard } from './guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
-import { UserRoleGuard } from '../user/guards/user-role.guard';
-import { Role } from '../user/entities/role.enum';
 import { User } from '../user/entities/user.entity';
-import { Roles } from '../app/decorators/roles.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -55,19 +50,5 @@ export class AuthController {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }
-
-  /**
-   * Retrieves the profile of the currently authenticated user.
-   * Uses AuthGuard and RoleGuard to ensure the user is authenticated and authorized.
-   * @param req - The request object containing user details.
-   * @returns The authenticated user's profile.
-   */
-  @Get('profile')
-  @UseGuards(AuthGuard, UserRoleGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.USER)
-  getProfile(@Req() req: Request) {
-    // Return the authenticated user's profile
-    return req.user;
   }
 }

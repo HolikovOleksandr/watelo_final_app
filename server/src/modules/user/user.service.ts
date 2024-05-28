@@ -33,7 +33,7 @@ export class UserService {
    * @throws InternalServerErrorException if failed to create user.
    */
   async create(dto: CreateUserDto): Promise<User> {
-    const { email, phone, name, surname, password } = dto;
+    const { password, email } = dto;
 
     // Check if user with the same email already exists
     const existUser = await this.userRepository.findOne({ where: { email } });
@@ -41,16 +41,10 @@ export class UserService {
 
     // Generate hashed password
     const hashSalt = +this.configService.get<number>('hash.salt');
-    const hashedPassword = await bcrypt.hash(password, hashSalt);
+    const hash = await bcrypt.hash(password, hashSalt);
 
     // Create a new user object
-    const newUser = this.userRepository.create({
-      email,
-      phone,
-      name,
-      surname,
-      password: hashedPassword,
-    });
+    const newUser = this.userRepository.create({ ...dto, password: hash });
 
     try {
       // Save and return the newly created user
@@ -81,7 +75,9 @@ export class UserService {
       relations: ['products'],
     });
 
+    // Throw NotFoundException if user is not found
     if (!user) throw new NotFoundException('User not found');
+
     return user;
   }
 
@@ -106,10 +102,14 @@ export class UserService {
    * @throws InternalServerErrorException if failed to update user.
    */
   async updateUser(id: string, dto: UpdateUserDto): Promise<User> {
-    const user = await this.findUserById(id);
-
     try {
-      // Save updated user data and return updated user
+      // Find the user by ID
+      const user = await this.userRepository.findOne({ where: { id } });
+
+      // Throw NotFoundException if user is not found
+      if (!user) throw new NotFoundException('User not found');
+
+      // Update user entity with new data from dto
       const updatedUser = await this.userRepository.save({
         ...user,
         ...dto,
@@ -117,11 +117,10 @@ export class UserService {
 
       return updatedUser;
     } catch (error) {
-      // Throw an internal server error if save fails
+      // Catch and re-throw the error as InternalServerErrorException
       throw new InternalServerErrorException('Failed to update user');
     }
   }
-
   /**
    * Remove a user by ID.
    * @param id - The ID of the user to remove.
@@ -130,6 +129,9 @@ export class UserService {
    */
   async removeUser(id: string): Promise<void> {
     const user = await this.findUserById(id);
+
+    // Throw NotFoundException if user is not found
+    if (!user) throw new NotFoundException('User not found');
 
     try {
       // Remove user from database
